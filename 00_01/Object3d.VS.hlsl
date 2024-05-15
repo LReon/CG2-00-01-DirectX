@@ -5,7 +5,7 @@ struct VertexShaderOutput
 
 struct VertxShaderInput
 {
-    float32_t4 position : POSITIONT;
+    float32_t4 position : POSITION;
 };
 
 VertexShaderOutput main(VertxShaderInput input)
