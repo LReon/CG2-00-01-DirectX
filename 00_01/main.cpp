@@ -7,6 +7,7 @@
 #include <cassert>
 #include <dxgidebug.h>
 #include <dxcapi.h>
+#include <math.h>
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -147,6 +148,211 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes) {
 	return vertexResource;
 };
 
+
+struct Matrix4x4 {
+	float mat[4][4];
+};
+
+
+Matrix4x4 MakeIdentity4x4() {
+	Matrix4x4 ret = {};
+	ret.mat[0][0] = 1;
+	ret.mat[1][1] = 1;
+	ret.mat[2][2] = 1;
+	ret.mat[3][3] = 1;
+
+	return ret;
+}
+
+struct Vector3 {
+	float x, y, z;
+};
+
+
+Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
+	Matrix4x4 ret = {};
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			for (int k = 0; k < 4; k++) {
+				ret.mat[i][j] += m1.mat[i][k] * m2.mat[k][j];
+
+			}
+		}
+	}
+	return ret;
+}
+
+struct Transform {
+	Vector3 scale;
+	Vector3 rotate;
+	Vector3 translate;
+};
+
+Matrix4x4 MakeScaleMatrix(const Vector3& scale) {
+	Matrix4x4 result = {};
+
+	result.mat[0][0] = scale.x;
+	result.mat[1][1] = scale.y;
+	result.mat[2][2] = scale.z;
+	result.mat[3][3] = 1.0f;
+
+	return result;
+}
+
+Matrix4x4 MakeTranslateMatrix(const Vector3& translate) {
+	Matrix4x4 result = {};
+
+	result.mat[0][0] = 1.0f;
+	result.mat[1][1] = 1.0f;
+	result.mat[2][2] = 1.0f;
+	result.mat[3][3] = 1.0f;
+	result.mat[3][0] = translate.x;
+	result.mat[3][1] = translate.y;
+	result.mat[3][2] = translate.z;
+
+	return result;
+}
+
+Matrix4x4 MakeRotateMatrix(const Vector3& rotate) {
+	
+	Matrix4x4 rotateX = {
+		1.0f,0.0f,0.0f,0.0f,
+		0.0f,cosf(rotate.x),sinf(rotate.x),0.0f,
+		0.0f,-sinf(rotate.x),cosf(rotate.x),0.0f,
+		0.0f,0.0f,0.0f,1.0f
+	};
+	
+
+	Matrix4x4 rotateY = {
+		cosf(rotate.y),0.0f,-sinf(rotate.y),0.0f,
+		0.0f,1.0f,0.0f,0.0f,
+		sinf(rotate.y),0.0f,cosf(rotate.y),0.0f,
+		0.0f,0.0f,0.0f,1.0f
+	};
+	
+	Matrix4x4 rotateZ = {
+		cosf(rotate.z),-sinf(rotate.z),0.0f,0.0f,
+		-sinf(rotate.z),cosf(rotate.z),0.0f,0.0f,
+		0.0f,0.0f,1.0f,0.0f,
+		0.0f,0.0f,0.0f,1.0f
+	};
+	return Multiply(Multiply(rotateX, rotateY), rotateZ);
+
+}
+
+Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate) {
+	Matrix4x4 ScaleM = MakeScaleMatrix(scale);
+	Matrix4x4 RotateM = MakeRotateMatrix(rotate);
+	Matrix4x4 TransM = MakeTranslateMatrix(translate);
+
+	return Multiply(Multiply(TransM, RotateM), ScaleM);
+}
+
+Matrix4x4 Inverse(const Matrix4x4& m) {
+    float determinant =
+        +m.mat[0][0] * m.mat[1][1] * m.mat[2][2] * m.mat[3][3]
+        + m.mat[0][0] * m.mat[1][2] * m.mat[2][3] * m.mat[3][1]
+        + m.mat[0][0] * m.mat[1][3] * m.mat[2][1] * m.mat[3][2]
+
+        - m.mat[0][0] * m.mat[1][3] * m.mat[2][2] * m.mat[3][1]
+        - m.mat[0][0] * m.mat[1][2] * m.mat[2][1] * m.mat[3][3]
+        - m.mat[0][0] * m.mat[1][1] * m.mat[2][3] * m.mat[3][2]
+
+        - m.mat[0][1] * m.mat[1][0] * m.mat[2][2] * m.mat[3][3]
+        - m.mat[0][2] * m.mat[1][0] * m.mat[2][3] * m.mat[3][1]
+        - m.mat[0][3] * m.mat[1][0] * m.mat[2][1] * m.mat[3][2]
+
+        + m.mat[0][3] * m.mat[1][0] * m.mat[2][2] * m.mat[3][1]
+        + m.mat[0][2] * m.mat[1][0] * m.mat[2][1] * m.mat[3][3]
+        + m.mat[0][1] * m.mat[1][0] * m.mat[2][3] * m.mat[3][2]
+       
+        + m.mat[0][1] * m.mat[1][2] * m.mat[2][0] * m.mat[3][3]
+        + m.mat[0][2] * m.mat[1][3] * m.mat[2][0] * m.mat[3][1]
+        + m.mat[0][3] * m.mat[1][1] * m.mat[2][0] * m.mat[3][2]
+
+        - m.mat[0][3] * m.mat[1][2] * m.mat[2][0] * m.mat[3][1]
+        - m.mat[0][2] * m.mat[1][1] * m.mat[2][0] * m.mat[3][3]
+        - m.mat[0][1] * m.mat[1][3] * m.mat[2][0] * m.mat[3][2]
+
+        - m.mat[0][1] * m.mat[1][2] * m.mat[2][3] * m.mat[3][0]
+        - m.mat[0][2] * m.mat[1][3] * m.mat[2][1] * m.mat[3][0]
+        - m.mat[0][3] * m.mat[1][1] * m.mat[2][2] * m.mat[3][0]
+
+        + m.mat[0][3] * m.mat[1][2] * m.mat[2][1] * m.mat[3][0]
+        + m.mat[0][2] * m.mat[1][1] * m.mat[2][3] * m.mat[3][0]
+        + m.mat[0][1] * m.mat[1][3] * m.mat[2][2] * m.mat[3][0];
+
+    Matrix4x4 result = {};
+    float recpDeterminant = 1.0f / determinant;
+    result.mat[0][0] = (m.mat[1][1] * m.mat[2][2] * m.mat[3][3] + m.mat[1][2] * m.mat[2][3] * m.mat[3][1] +
+        m.mat[1][3] * m.mat[2][1] * m.mat[3][2] - m.mat[1][3] * m.mat[2][2] * m.mat[3][1] -
+        m.mat[1][2] * m.mat[2][1] * m.mat[3][3] - m.mat[1][1] * m.mat[2][3] * m.mat[3][2]) * recpDeterminant;
+    result.mat[0][1] = (-m.mat[0][1] * m.mat[2][2] * m.mat[3][3] - m.mat[0][2] * m.mat[2][3] * m.mat[3][1] -
+        m.mat[0][3] * m.mat[2][1] * m.mat[3][2] + m.mat[0][3] * m.mat[2][2] * m.mat[3][1] +
+        m.mat[0][2] * m.mat[2][1] * m.mat[3][3] + m.mat[0][1] * m.mat[2][3] * m.mat[3][2]) * recpDeterminant;
+    result.mat[0][2] = (m.mat[0][1] * m.mat[1][2] * m.mat[3][3] + m.mat[0][2] * m.mat[1][3] * m.mat[3][1] +
+        m.mat[0][3] * m.mat[1][1] * m.mat[3][2] - m.mat[0][3] * m.mat[1][2] * m.mat[3][1] -
+        m.mat[0][2] * m.mat[1][1] * m.mat[3][3] - m.mat[0][1] * m.mat[1][3] * m.mat[3][2]) * recpDeterminant;
+    result.mat[0][3] = (-m.mat[0][1] * m.mat[1][2] * m.mat[2][3] - m.mat[0][2] * m.mat[1][3] * m.mat[2][1] -
+        m.mat[0][3] * m.mat[1][1] * m.mat[2][2] + m.mat[0][3] * m.mat[1][2] * m.mat[2][1] +
+        m.mat[0][2] * m.mat[1][1] * m.mat[2][3] + m.mat[0][1] * m.mat[1][3] * m.mat[2][2]) * recpDeterminant;
+
+    result.mat[1][0] = (-m.mat[1][0] * m.mat[2][2] * m.mat[3][3] - m.mat[1][2] * m.mat[2][3] * m.mat[3][0] -
+        m.mat[1][3] * m.mat[2][0] * m.mat[3][2] + m.mat[1][3] * m.mat[2][2] * m.mat[3][0] +
+        m.mat[1][2] * m.mat[2][0] * m.mat[3][3] + m.mat[1][0] * m.mat[2][3] * m.mat[3][2]) * recpDeterminant;
+    result.mat[1][1] = (m.mat[0][0] * m.mat[2][2] * m.mat[3][3] + m.mat[0][2] * m.mat[2][3] * m.mat[3][0] +
+        m.mat[0][3] * m.mat[2][0] * m.mat[3][2] - m.mat[0][3] * m.mat[2][2] * m.mat[3][0] -
+        m.mat[0][2] * m.mat[2][0] * m.mat[3][3] - m.mat[0][0] * m.mat[2][3] * m.mat[3][2]) * recpDeterminant;
+    result.mat[1][2] = (-m.mat[0][0] * m.mat[1][2] * m.mat[3][3] - m.mat[0][2] * m.mat[1][3] * m.mat[3][0] -
+        m.mat[0][3] * m.mat[1][0] * m.mat[3][2] + m.mat[0][3] * m.mat[1][2] * m.mat[3][0] +
+        m.mat[0][2] * m.mat[1][0] * m.mat[3][3] + m.mat[0][0] * m.mat[1][3] * m.mat[3][2]) * recpDeterminant;
+    result.mat[1][3] = (m.mat[0][0] * m.mat[1][2] * m.mat[2][3] + m.mat[0][2] * m.mat[1][3] * m.mat[2][0] +
+        m.mat[0][3] * m.mat[1][0] * m.mat[2][2] - m.mat[0][3] * m.mat[1][2] * m.mat[2][0] -
+        m.mat[0][2] * m.mat[1][0] * m.mat[2][3] - m.mat[0][0] * m.mat[1][3] * m.mat[2][2]) * recpDeterminant;
+
+    result.mat[2][0] = (m.mat[1][0] * m.mat[2][1] * m.mat[3][3] + m.mat[1][1] * m.mat[2][3] * m.mat[3][0] +
+        m.mat[1][3] * m.mat[2][0] * m.mat[3][1] - m.mat[1][3] * m.mat[2][1] * m.mat[3][0] -
+        m.mat[1][1] * m.mat[2][0] * m.mat[3][3] - m.mat[1][0] * m.mat[2][3] * m.mat[3][1]) * recpDeterminant;
+    result.mat[2][1] = (-m.mat[0][0] * m.mat[2][1] * m.mat[3][3] - m.mat[0][1] * m.mat[2][3] * m.mat[3][0] -
+        m.mat[0][3] * m.mat[2][0] * m.mat[3][1] + m.mat[0][3] * m.mat[2][1] * m.mat[3][0] +
+        m.mat[0][1] * m.mat[2][0] * m.mat[3][3] + m.mat[0][0] * m.mat[2][3] * m.mat[3][1]) * recpDeterminant;
+    result.mat[2][2] = (m.mat[0][0] * m.mat[1][1] * m.mat[3][3] + m.mat[0][1] * m.mat[1][3] * m.mat[3][0] +
+        m.mat[0][3] * m.mat[1][0] * m.mat[3][1] - m.mat[0][3] * m.mat[1][1] * m.mat[3][0] -
+        m.mat[0][1] * m.mat[1][0] * m.mat[3][3] - m.mat[0][0] * m.mat[1][3] * m.mat[3][1]) * recpDeterminant;
+    result.mat[2][3] = (-m.mat[0][0] * m.mat[1][1] * m.mat[2][3] - m.mat[0][1] * m.mat[1][3] * m.mat[2][0] -
+        m.mat[0][3] * m.mat[1][0] * m.mat[2][1] + m.mat[0][3] * m.mat[1][1] * m.mat[2][0] +
+        m.mat[0][1] * m.mat[1][0] * m.mat[2][3] + m.mat[0][0] * m.mat[1][3] * m.mat[2][1]) * recpDeterminant;
+
+    result.mat[3][0] = (-m.mat[1][0] * m.mat[2][1] * m.mat[3][2] - m.mat[1][1] * m.mat[2][2] * m.mat[3][0] -
+        m.mat[1][2] * m.mat[2][0] * m.mat[3][1] + m.mat[1][2] * m.mat[2][1] * m.mat[3][0] +
+        m.mat[1][1] * m.mat[2][0] * m.mat[3][2] + m.mat[1][0] * m.mat[2][2] * m.mat[3][1]) * recpDeterminant;
+    result.mat[3][1] = (m.mat[0][0] * m.mat[2][1] * m.mat[3][2] + m.mat[0][1] * m.mat[2][2] * m.mat[3][0] +
+        m.mat[0][2] * m.mat[2][0] * m.mat[3][1] - m.mat[0][2] * m.mat[2][1] * m.mat[3][0] -
+        m.mat[0][1] * m.mat[2][0] * m.mat[3][2] - m.mat[0][0] * m.mat[2][2] * m.mat[3][1]) * recpDeterminant;
+    result.mat[3][2] = (-m.mat[0][0] * m.mat[1][1] * m.mat[3][2] - m.mat[0][1] * m.mat[1][2] * m.mat[3][0] -
+        m.mat[0][2] * m.mat[1][0] * m.mat[3][1] + m.mat[0][2] * m.mat[1][1] * m.mat[3][0] +
+        m.mat[0][1] * m.mat[1][0] * m.mat[3][2] + m.mat[0][0] * m.mat[1][2] * m.mat[3][1]) * recpDeterminant;
+    result.mat[3][3] = (m.mat[0][0] * m.mat[1][1] * m.mat[2][2] + m.mat[0][1] * m.mat[1][2] * m.mat[2][0] +
+        m.mat[0][2] * m.mat[1][0] * m.mat[2][1] - m.mat[0][2] * m.mat[1][1] * m.mat[2][0] -
+        m.mat[0][1] * m.mat[1][0] * m.mat[2][2] - m.mat[0][0] * m.mat[1][2] * m.mat[2][1]) * recpDeterminant;
+
+    return result;
+}
+
+float cot(float theta) {
+	return 1 / std::tanf(theta);
+}
+
+Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip) {
+
+	Matrix4x4 result = {};
+	result.mat[0][0] = 1.0f / aspectRatio * cot(fovY / 2);
+	result.mat[1][1] = cot(fovY / 2);
+	result.mat[2][2] = farClip / (farClip - nearClip);
+	result.mat[2][3] = 1.0f;
+	result.mat[3][2] = (-nearClip + farClip) / (farClip - nearClip);
+	return result;
+}
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -429,13 +635,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 
-	D3D12_ROOT_PARAMETER rootParameters[1] = {};
+	D3D12_ROOT_PARAMETER rootParameters[2] = {};
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameters[0].Descriptor.ShaderRegister = 0;
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParameters[1].Descriptor.ShaderRegister = 0;
 	descriptionRootSignature.pParameters = rootParameters;
 	descriptionRootSignature.NumParameters = _countof(rootParameters);
 
+	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
+
+	Matrix4x4* wvpData = nullptr;
+	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+
+	*wvpData = MakeIdentity4x4();
+
+
+	
+
+	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	
+	
+	Transform cameraTransform({ 1.0f,1.0f,1.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,0.0f,-5.0f });
+
+	
+
+	
 	ID3DBlob* signatureBlob = nullptr;
 	ID3DBlob* errorBlob = nullptr;
 	hr = D3D12SerializeRootSignature(&descriptionRootSignature,
@@ -575,9 +802,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 			commandList->DrawInstanced(3, 1, 0, 0);
 
-
+			transform.rotate.y += 0.03f;
+			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			Matrix4x4 cametaMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			Matrix4x4 viewMatrix = Inverse(cametaMatrix);
+			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
+			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+			*wvpData = worldViewProjectionMatrix;
 			// 画面に描く処理はすべて終わり、画面に映すので、状態を遷移
 			// 今回はRenderTargetからPresentにする
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
@@ -638,6 +872,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	device->Release();
 	useAdapter->Release();
 	dxgiFactory->Release();
+	wvpResource->Release();
 
 #ifdef _DEBUG
 	debugController->Release();
