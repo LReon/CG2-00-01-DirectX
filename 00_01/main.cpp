@@ -750,13 +750,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 
+	*materialData = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	
-	
-	float inputFloat4[4] = { 0.0f,0.0f,0.0f,0.0f };
+	/*float inputFloat4[4] = { 0.0f,0.0f,0.0f,0.0f };
 	inputFloat4[0] = materialData->x;
 	inputFloat4[1] = materialData->y;
 	inputFloat4[2] = materialData->z;
-	inputFloat4[3] = materialData->w;
+	inputFloat4[3] = materialData->w;*/
 
 	
 
@@ -825,13 +825,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 			ImGui::Begin("Change color");
-			ImGui::InputFloat4("RGB", inputFloat4);
+			ImGui::ColorEdit4("RGB",&materialData->x);
 			ImGui::End();
 
-			materialData->x = inputFloat4[0];
+			/*materialData->x = inputFloat4[0];
 			materialData->y = inputFloat4[1];
 			materialData->z = inputFloat4[2];
-			materialData->w = inputFloat4[3];
+			materialData->w = inputFloat4[3];*/
 
 			ImGui::Render();
 
