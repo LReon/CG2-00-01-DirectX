@@ -498,7 +498,7 @@ ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t 
 //	result.mat[0][3] = -(right + left / (right - left));
 //	result.mat[1][3] = -(top + bottom / (top - bottom));
 //	result.mat[2][3] = -(farClip + nearClip / (farClip - nearClip));;;
-//	result.mat[3][3] = 1.0f;
+//	result.mat[3][3] = 1.0f;;
 //	return result;
 //
 //}
