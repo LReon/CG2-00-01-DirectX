@@ -1139,7 +1139,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->DrawInstanced(6, 1, 0, 0);
 
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
-			commandList->SetGraphicsRootConstantBufferView(1,transforma)
+			//commandList->SetGraphicsRootConstantBufferView(1,transforma)
 			
 			
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
@@ -1229,7 +1229,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	pixelShaderBlob->Release();
 	vertexShaderBlob->Release();
 	srvDescriptorHeap->Release();
-	
+	vertexResourceSprite->Release();
+
 	materialResource->Release();
 	// リソースリークチェック
 	IDXGIDebug1* debug;
