@@ -490,18 +490,18 @@ ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t 
 	return resource;
 }
 
-//Matrix4x4 OrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
-//	Matrix4x4 result = {};
-//	result.mat[0][0] = 2 / (right - left);
-//	result.mat[1][1] = 2 / (top - bottom);
-//	result.mat[2][2] = -2 / (farClip - nearClip);
-//	result.mat[0][3] = -(right + left / (right - left));
-//	result.mat[1][3] = -(top + bottom / (top - bottom));
-//	result.mat[2][3] = -(farClip + nearClip / (farClip - nearClip));;;
-//	result.mat[3][3] = 1.0f;;
-//	return result;
-//
-//}
+Matrix4x4 OrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
+	Matrix4x4 result = {};
+	result.mat[0][0] = 2 / (right - left);
+	result.mat[1][1] = 2 / (top - bottom);
+	result.mat[2][2] = -2 / (farClip - nearClip);
+	result.mat[0][3] = -(right + left / (right - left));
+	result.mat[1][3] = -(top + bottom / (top - bottom));
+	result.mat[2][3] = -(farClip + nearClip / (farClip - nearClip));
+	result.mat[3][3] = 1.0f;
+	return result;
+
+}
 
 
 
@@ -900,7 +900,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 
-	/*ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
+	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
 
 
 	ID3D12Resource* vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 6);
@@ -910,7 +910,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	vertexBufferViewSprite.SizeInBytes = sizeof(VertexData) * 6;
 
-	vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);*/
+	vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);
 
 	
 	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(VertexData));
@@ -1021,6 +1021,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	scissorRect.top = 0;
 	scissorRect.bottom = kClientHeight;
 
+	VertexData* vertexDataSprite = nullptr;
+	vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
+	vertexDataSprite[0].position = { 0.0f,360.0f,0.0f,1.0f };
+	vertexDataSprite[0].texcoord = { 0.0f,0.0f };
+
+	vertexDataSprite[1].position = { 0.0f,0.0f,0.0f,1.0f };
+	vertexDataSprite[1].texcoord = { 0.0f,0.0f };
+
+	vertexDataSprite[2].position = { 640.0f,360.0f,0.0f,1.0f };
+	vertexDataSprite[2].texcoord = { 1.0f,1.0f };
+
+	vertexDataSprite[3].position = { 0.0f,0.0f,0.0f,1.0f };
+	vertexDataSprite[3].texcoord = { 0.0f,0.0f };
+	vertexDataSprite[4].position = { 640.0f,0.0f,0.0f,1.0f };
+	vertexDataSprite[4].texcoord = { 1.0f,0.0f };
+	vertexDataSprite[5].position = { 640.0f,360.0f,0.0f,1.0f };
+	vertexDataSprite[5].texcoord = { 1.0f,1.0f };
+
 
 	
 	IMGUI_CHECKVERSION();
@@ -1119,6 +1137,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
 			commandList->DrawInstanced(6, 1, 0, 0);
+
+			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+			commandList->SetGraphicsRootConstantBufferView(1,transforma)
 			
 			
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
