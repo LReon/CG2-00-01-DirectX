@@ -1186,6 +1186,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	textureResource->Release();
 	intermediateResource->Release();
 	depthStencilResource->Release();
+	dsvDescriptorHeap->Release();
+	infoQueue->Release();
+	dxcUtils->Release();
+	dxcCompiler->Release();
+	includeHandler->Release();
 
 #ifdef _DEBUG
 	debugController->Release();
@@ -1204,9 +1209,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexShaderBlob->Release();
 	srvDescriptorHeap->Release();
 	
-	materialResource->Release();
+	
 
 	
+
 	// リソースリークチェック
 	IDXGIDebug1* debug;
 	if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
@@ -1214,6 +1220,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
 		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
 		debug->Release();
+		materialResource->Release();
 
 	}
 
