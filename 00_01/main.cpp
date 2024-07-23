@@ -363,6 +363,28 @@ Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip
 	return result;
 }
 
+Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
+	Matrix4x4 result = {};
+	result.mat[0][0] = 2.0f / (right - left);
+	result.mat[0][1] = 0.0f;
+	result.mat[0][2] = 0.0f;
+	result.mat[0][3] = (-right + left) / (right - left);
+	result.mat[1][0] = 0.0f;
+	result.mat[1][1] = 2 / (top - bottom);
+	result.mat[1][2] = 0.0f;
+	result.mat[1][3] = (-right + left) / (right - left);
+	result.mat[2][0] = 0.0f;
+	result.mat[2][1] = 0.0f;
+	result.mat[2][2] = -2.0f / (farClip - nearClip);
+	result.mat[2][3] = (-farClip + nearClip) / (farClip - nearClip);
+	result.mat[3][0] = 0.0f;
+	result.mat[3][1] = 0.0f;
+	result.mat[3][2] = 0.0f;
+	result.mat[3][3] = 1.0f;
+	return result;
+}
+
+
 ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptor, bool shaderVisible) {
 	ID3D12DescriptorHeap* descriptorHeap = nullptr;
 	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{};
@@ -1021,9 +1043,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	scissorRect.top = 0;
 	scissorRect.bottom = kClientHeight;
 
+
+
+	ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(Matrix4x4));
+
+	Matrix4x4* transformationMatrixDataSprite = nullptr;
+
+	transformationMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite));
+
+	*transformationMatrixDataSprite = MakeIdentity4x4();
+
+	Transform transformSprite({ 1.0f,1.0f,1.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,0.0f,0.0f });
+	
+
+	Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+	Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
+	Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
+	Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
+	*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
+
+
 	VertexData* vertexDataSprite = nullptr;
 	vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
-	vertexDataSprite[0].position = { 0.0f,360.0f,0.0f,1.0f };
+	vertexDataSprite[0].position = { 1.0f,360.0f,0.0f,1.0f };
 	vertexDataSprite[0].texcoord = { 0.0f,0.0f };
 
 	vertexDataSprite[1].position = { 0.0f,0.0f,0.0f,1.0f };
@@ -1040,6 +1082,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexDataSprite[5].texcoord = { 1.0f,1.0f };
 
 
+	
 	
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -1138,7 +1181,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			commandList->DrawInstanced(6, 1, 0, 0);
 
+			//commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+			commandList->DrawInstanced(6, 1, 0, 0);
+
 			//commandList->SetGraphicsRootConstantBufferView(1,transforma)
 			
 			
@@ -1230,6 +1278,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexShaderBlob->Release();
 	srvDescriptorHeap->Release();
 	vertexResourceSprite->Release();
+
+	transformationMatrixResourceSprite->Release();
 
 	materialResource->Release();
 	// リソースリークチェック
