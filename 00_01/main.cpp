@@ -514,6 +514,29 @@ ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t 
 	return resource;
 }
 
+Matrix4x4 MakeOrthogphicMatrix(const float& left, const float& top, const float& right, const float& bottom, const float& nearClip, const float& farClip)
+{
+	Matrix4x4 result = { 0 };
+
+	result.mat[0][0] = 2.0f / (right - left);
+
+	result.mat[1][1] = 2.0f / (top - bottom);
+
+	result.mat[2][2] = 1.0f / (farClip - nearClip);
+
+	result.mat[3][0] = (left + right) / (left - right);
+
+	result.mat[3][1] = (top + bottom) / (bottom - top);
+
+	result.mat[3][2] = nearClip / (nearClip - farClip);
+
+	result.mat[3][3] = 1.0f;
+
+	return result;
+}
+
+
+
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -839,10 +862,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	*wvpData = MakeIdentity4x4();
 
-
+	//Sprite用のTransformMatrix用のリソースを作る。
+	ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(Matrix4x4));
+	//データを書き込む
+	Matrix4x4* transfromationMatrixDataSprite = nullptr;
+	//書き込むためのアドレスを取得
+	transformationMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&transfromationMatrixDataSprite));
+	//単位行列を書き込んでおく
+	*transfromationMatrixDataSprite = MakeIdentity4x4();
 	
 
+
+
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+
+	float spriteMove[3]{ 0.0f,0.0f,0.0f };
+
+	Transform transformSprite{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {spriteMove[0], spriteMove[1], spriteMove[2]}};
 	
 	
 	Transform cameraTransform({ 1.0f,1.0f,1.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,0.0f,-5.0f });
@@ -925,7 +961,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(SUCCEEDED(hr));
 
 	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
-	
+	ID3D12Resource* vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 6);
+
+
 	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(VertexData));
 
 	Vector4* materialData = nullptr;
@@ -994,6 +1032,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexData[5].position = { 0.5f,-0.5f,-0.5f,1.0f };
 	vertexData[5].texcoord = { 1.0f,1.0f };
 
+	//頂点バッファビューを作成する
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSprite{};
+	//リソースの先頭のアドレスから使う
+	vertexBufferViewSprite.BufferLocation = vertexResourceSprite->GetGPUVirtualAddress();
+	//使用するリソースサイズは頂点3つ分のサイズ
+	vertexBufferViewSprite.SizeInBytes = sizeof(VertexData) * 6;
+	//1頂点当たりのサイズ
+	vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);
+
+	//頂点リソースにデータを書き込む
+	VertexData* vertexDataSprite = nullptr;
+	//書き込むためのアドレスを取得
+	vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
+
+	vertexDataSprite[0].position = { 0.0f, 360.0f, 0.0f, 1.0f }; // 左下
+	vertexDataSprite[0].texcoord = { 0.0f, 1.0f };
+	vertexDataSprite[1].position = { 0.0f, 0.0f, 0.0f, 1.0f }; // 左上
+	vertexDataSprite[1].texcoord = { 0.0f, 0.0f };
+	vertexDataSprite[2].position = { 640.0f, 360.0f, 0.0f, 1.0f }; // 右下
+	vertexDataSprite[2].texcoord = { 1.0f, 1.0f };
+
+	vertexDataSprite[3].position = { 0.0f, 0.0f, 0.0f, 1.0f }; // 右下
+	vertexDataSprite[3].texcoord = { 0.0f, 0.0f };
+	vertexDataSprite[4].position = { 640.0f, 0.0f, 0.0f, 1.0f }; // 左上
+	vertexDataSprite[4].texcoord = { 1.0f, 0.0f };
+	vertexDataSprite[5].position = { 640.0f, 360.0f, 0.0f, 1.0f }; // 右上
+	vertexDataSprite[5].texcoord = { 1.0f, 1.0f };
+
 
 	D3D12_VIEWPORT viewport{};
 	viewport.Width = kClientWidth;
@@ -1049,18 +1115,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 			*wvpData = worldViewProjectionMatrix;
 
+			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
+			Matrix4x4 projectionMatrixSprite = MakeOrthogphicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.1f, 100.0f);
+			Matrix4x4 worldViewProjectionmatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
+			*transfromationMatrixDataSprite = worldViewProjectionmatrixSprite;
+
+
+
 			ImGui::ShowDemoWindow();
 
 
 
-			/*ImGui::Begin("Change color");
-			ImGui::InputFloat4("RGB", inputFloat4);
+			ImGui::Begin("MoveSprite");
+			ImGui::SliderFloat3("moveSprite", spriteMove,0.0f,1280.0f);
+
+			transformSprite.translate.x = spriteMove[0];
+			transformSprite.translate.y = spriteMove[1];
+			transformSprite.translate.z = spriteMove[2];
+
 			ImGui::End();
 
-			materialData->x = inputFloat4[0];
-			materialData->y = inputFloat4[1];
-			materialData->z = inputFloat4[2];
-			materialData->w = inputFloat4[3];*/
+			
 			
 			ImGui::Render();
 
@@ -1102,8 +1178,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			commandList->SetDescriptorHeaps(1, descriptorHeaps);
 			commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
-
-
+			///*commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+			//commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddre*/ss());
+			
 			commandList->RSSetViewports(1, &viewport);
 			commandList->RSSetScissorRects(1, &scissorRect);
 			commandList->SetGraphicsRootSignature(rootSignature);
@@ -1115,6 +1192,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
 			commandList->DrawInstanced(6, 1, 0, 0);
+			
+			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+
+			commandList->DrawInstanced(6, 1, 0, 0);
+
+
 			
 			
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
@@ -1191,6 +1275,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	dxcUtils->Release();
 	dxcCompiler->Release();
 	includeHandler->Release();
+	transformationMatrixResourceSprite->Release();
 
 #ifdef _DEBUG
 	debugController->Release();
