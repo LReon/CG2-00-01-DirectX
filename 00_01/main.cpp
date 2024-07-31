@@ -8,6 +8,8 @@
 #include <dxgidebug.h>
 #include <dxcapi.h>
 #include <math.h>
+#include <cmath>
+#define _USE_MATH_DEFINES
 #include "../externals/imgui/imgui.h"
 #include "../externals/imgui/imgui_impl_dx12.h"
 #include "../externals/imgui/imgui_impl_win32.h"
@@ -881,7 +883,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Transform transformSprite{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {spriteMove[0], spriteMove[1], spriteMove[2]}};
 	
 	
-	Transform cameraTransform({ 1.0f,1.0f,1.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,0.0f,-5.0f });
+	Transform cameraTransform({ 1.0f,1.0f,1.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,0.0f,-10.0f });
 
 	
 
@@ -960,7 +962,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 
-	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
+	// 緯度方向の分割数
+	const int kSubdivision = 16;
+
+	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData)* kSubdivision * kSubdivision * 6);
 	ID3D12Resource* vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 6);
 
 
@@ -1006,7 +1011,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * 6;
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * kSubdivision * kSubdivision * 6;
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
 	
@@ -1040,6 +1045,108 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexBufferViewSprite.SizeInBytes = sizeof(VertexData) * 6;
 	//1頂点当たりのサイズ
 	vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);
+
+	
+	
+	const float kLonEvery = float(M_PI) * 2.0f / float(kSubdivision);
+
+	const float kLatEvery = float(M_PI) / float(kSubdivision);
+
+	for (int latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+
+		float lat = float(-M_PI) / 2.0f + kLatEvery * latIndex;
+
+		for (int lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+
+			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
+
+			float lon = lonIndex * kLonEvery;
+
+
+			float u = float(lonIndex) / float(kSubdivision);
+			float v = 1.0f - float(latIndex) / float(kSubdivision);
+
+			VertexData vLB = {
+				{
+					cos(lat) * cos(lon),
+					sin(lat),
+					cos(lat) * sin(lon),
+
+					1.0f
+				},
+				{
+					u,
+					v
+				}
+			};
+
+			VertexData vLT = {
+				{
+					cos(lat + kLatEvery) * cos(lon),
+					sin(lat + kLatEvery),
+					cos(lat + kLatEvery) * sin(lon),
+					1.0f
+				},
+				{
+					u,
+					v - 1.0f / float(kSubdivision)
+				}
+			};
+
+			VertexData vRB = {
+				{
+					cos(lat) * cos(lon + kLonEvery),
+					sin(lat),
+					cos(lat) * sin(lon + kLonEvery),
+					1.0f
+				},
+				{
+					u + 1.0f / float(kSubdivision) ,
+					v
+				}
+			};
+
+			VertexData vRT = {
+				{
+					cos(lat + kLatEvery) * cos(lon + kLonEvery),
+					sin(lat + kLatEvery),
+					cos(lat + kLatEvery) * sin(lon + kLonEvery),
+					1.0f
+				},
+				{
+					u + 1.0f / float(kSubdivision),
+					v - 1.0f / float(kSubdivision)
+				}
+			};
+
+			// 原点aにデータを入力する
+			vertexData[start] = vRT;
+
+			// b の頂点データを計算
+			vertexData[start + 1] = vRB;
+			vertexData[start + 2] = vLB;
+			vertexData[start + 3] = vLB;
+
+			// c の頂点データを計算
+			
+			vertexData[start + 4] = vLT;
+
+			// d の頂点データを計算
+			vertexData[start + 5] = vRT;
+
+
+
+		}
+
+
+
+
+
+	}
+	
+
+
+
 
 	//頂点リソースにデータを書き込む
 	VertexData* vertexDataSprite = nullptr;
@@ -1191,14 +1298,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
-			commandList->DrawInstanced(6, 1, 0, 0);
+			//commandList->DrawInstanced(6, 1, 0, 0);
 			
+
+			/*commandList->IASetVertexBuffers(0, 0, &vertexBufferView);
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());*/
+
+
+			commandList->DrawInstanced(kSubdivision * kSubdivision * 6,1,0,0);
+
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 
 			commandList->DrawInstanced(6, 1, 0, 0);
 
-
+			
 			
 			
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
