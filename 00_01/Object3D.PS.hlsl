@@ -1,10 +1,9 @@
-#include "Object3d.hlsli"
+#include "object3d.hlsli"
 
 struct Material
 {
     float32_t4 color;
     int32_t enableLightng;
-    float32_t4x4 uvTransform;
 };
 
 struct PixcelShaderOutput
@@ -27,14 +26,11 @@ ConstantBuffer<DirectrionaLight> gDirectrionaLight : register(b1);
 PixcelShaderOutput main(VertexShaderOutput input)
 {
     PixcelShaderOutput output;
-    
-    float4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
-    float32_t4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
+    float32_t4 textureColor = gTexture.Sample(gSampler, input.texcoord);
     
     if (gMaterial.enableLightng != 0)//Litingする場合
     {
-        float NdotL = dot(normalize(input.normal), -gDirectrionaLight.direction);
-        float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
+        float cos = saturate(dot(normalize(input.normal), -gDirectrionaLight.direction));
         output.color = gMaterial.color * textureColor * gDirectrionaLight.color * cos * gDirectrionaLight.intensity;
     }
     else
