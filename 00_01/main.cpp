@@ -892,8 +892,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//単位行列を書き込んでおく
 	*transfromationMatrixDataSprite = MakeIdentity4x4();
 	
+	float objScale[3] = { 1.0f,1.0f,1.0f };
 
+	float objRotate[3] = { 0.0f,0.0f,0.0f };
 
+	float objTranslate[3] = { 0.0f,0.0f,0.0f };
 
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
@@ -1026,7 +1029,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 
 	//2
-	DirectX::ScratchImage mipImages2 = LoadTexture("resources/uvChecker.png");
+	DirectX::ScratchImage mipImages2 = LoadTexture("resources/monsterBall.png");
 	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
 	ID3D12Resource* textureResource2 = CreateTextureResource(device, metadata2);
 	ID3D12Resource* intermediateResource2 =  UploadTextureData(textureResource2, mipImages2,device,commandList);
@@ -1283,10 +1286,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			ImGui::Begin("MoveSprite");
 			ImGui::SliderFloat3("moveSprite", spriteMove,0.0f,1280.0f);
+			ImGui::SliderFloat3("objScale", objScale, 1.0f, 100.0f);
+			ImGui::SliderFloat3("objRotate", objRotate, 0.0f, 100.0f);
+			ImGui::SliderFloat3("objTranslate", objTranslate, 0.0f, 100.0f);
 
 			transformSprite.translate.x = spriteMove[0];
 			transformSprite.translate.y = spriteMove[1];
 			transformSprite.translate.z = spriteMove[2];
+
+			transform.scale.x = objScale[0];
+			transform.scale.y = objScale[1];
+			transform.scale.z = objScale[2];
+
+			transform.rotate.x = objRotate[0];
+			transform.rotate.y = objRotate[1];
+			transform.rotate.z = objRotate[2];
+
+			transform.translate.x = objTranslate[0];
+			transform.translate.y = objTranslate[1];
+			transform.translate.z = objTranslate[2];
 
 			ImGui::End();
 
