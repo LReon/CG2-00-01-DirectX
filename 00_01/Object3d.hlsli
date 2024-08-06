@@ -5,3 +5,4 @@ struct VertexShaderOutput
     float32_t3 normal : NORMAL;
 };
 
+
