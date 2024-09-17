@@ -985,7 +985,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	//}
 
 	// モデルを読み込み
-	ModelData modelData = LoadObjFile("../resources/06_02", "axis.obj");
+	ModelData modelData = LoadObjFile("../resources/06_02", "plane.obj");
 
 	// 頂点リソースを作成
 	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
@@ -1255,19 +1255,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			LightIntensity = directionalLightData->intensity;
 
 			// X、Y、Zの位置をスライダーで変更
-			ImGui::SliderFloat("X Position", &transform.rotate.x, -10.0f, 10.0f);
-			ImGui::SliderFloat("Y Position", &transform.rotate.y, -10.0f, 10.0f);
-			ImGui::DragFloat("Z Position", &transform.rotate.z, 0.1f, 1.0f);
+			ImGui::SliderFloat("Object Scale X", &transform.scale.x, 1.0f, 10.0f);
+			ImGui::SliderFloat("Object Scale Y", &transform.scale.y, 1.0f, 10.0f);
+			ImGui::SliderFloat("Object Scale Z", &transform.scale.z, 1.0f, 10.0f);
+			ImGui::SliderFloat("Object Rotate X", &transform.rotate.x, 0.0f, 10.0f);
+			ImGui::SliderFloat("Object Rotate Y", &transform.rotate.y, 0.0f, 10.0f);
+			ImGui::SliderFloat("Object Rotate Z", &transform.rotate.z, 0.0f, 10.0f);
+			ImGui::SliderFloat("Object Translate X", &transform.translate.x, 0.0f, 10.0f);
+			ImGui::SliderFloat("Object Translate Y", &transform.translate.y, 0.0f, 10.0f);
+			ImGui::SliderFloat("Object Translate Z", &transform.translate.z, 0.0f, 10.0f);
 
-			ImGui::DragFloat3("spriteS", TransformUi[0], 0.1f, 1.0f);
-			ImGui::DragFloat3("spriteR", TransformUi[1], 0.1f, 1.0f);
-			ImGui::DragFloat3("spriteT", TransformUi[2], 0.1f, 1.0f);
 
-			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+			ImGui::SliderFloat3("Sprite Scale", TransformUi[0], 1.0f, 10.0f);
+			ImGui::SliderFloat3("Sprite Rotate", TransformUi[1], 1.0f, 10.0f);
+			ImGui::SliderFloat3("Sprite Translate", TransformUi[2], 1.0f, 10.0f);
 
-			ImGui::DragFloat4("LightColor", LightColor, 0.01f, 1.0f);
-			ImGui::DragFloat3("LightDirection", LightDirection, 0.01f, 1.0f);
-			ImGui::DragFloat("LightIntensity", &LightIntensity, 0.01f, 1.0f);
+			
+
+			ImGui::SliderFloat3("LightColor", LightColor, 1.0f, 10.0f);
+			ImGui::SliderFloat3("LightDirection", LightDirection, 0.01f, 1.0f);
+			ImGui::SliderFloat("LightIntensity", &LightIntensity, 0.01f, 1.0f);
 
 			ImGui::DragFloat2("uvTransform", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
 			ImGui::DragFloat2("uvScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
