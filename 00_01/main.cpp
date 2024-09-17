@@ -1642,7 +1642,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	//モデルの読み込み
-	ModelData modelData = LoadObjFile("resources", "plane.obj");
+	ModelData modelData = LoadObjFile("resources", "axis.obj");
 	ID3D12Resource* vertexResourceModel = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
 
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewModel{};
