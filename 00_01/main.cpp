@@ -1227,7 +1227,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	input->Update();
 
-	delete input;
+	
 	//ImGuiの初期化
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -1509,6 +1509,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	//textureResource->Release();
 	//textureResource2->Release();
+
+	delete input;
 
 #ifdef _DEBUG
 	//debugController->Release();
