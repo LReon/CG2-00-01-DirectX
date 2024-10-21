@@ -1224,8 +1224,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	Input* input = nullptr;
 	input = new Input();
 	input->Initialize(wc.hInstance,hwnd);
-	delete input;
 
+	input->Update();
+
+	delete input;
 	//ImGuiの初期化
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
