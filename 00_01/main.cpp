@@ -1224,7 +1224,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	Input* input = nullptr;
 	input = new Input();
 	input->Initialize(wc.hInstance,hwnd);
-	delete input;
+	
 
 	//ImGuiの初期化
 	IMGUI_CHECKVERSION();
@@ -1507,6 +1507,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	//textureResource->Release();
 	//textureResource2->Release();
+	delete input;
 
 #ifdef _DEBUG
 	//debugController->Release();
