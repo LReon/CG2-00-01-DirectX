@@ -14,6 +14,7 @@
 #include "../externals/DirectXTex/DirectXTex.h"
 #include <cmath>
 #include <wrl.h>
+#include "Input.h"
 
 #include <fstream>
 #include <sstream>
@@ -156,6 +157,7 @@ IDxcBlob* CompileShader
 	Microsoft::WRL::ComPtr<IDxcBlobEncoding> shaderSource = nullptr;
 	HRESULT hr = dxcutils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
 	//読まれなかったら止める
+
 	assert(SUCCEEDED(hr));
 	//読み込んだファイル内容を設定する
 	DxcBuffer shaderSourceBuffer;
@@ -1218,6 +1220,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
 	directionalLightData->intensity = 1.0f;
+
+	Input* input = nullptr;
+	input = new Input();
+	input->Initialize(wc.hInstance,hwnd);
+	delete input;
 
 	//ImGuiの初期化
 	IMGUI_CHECKVERSION();
