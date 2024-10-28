@@ -1225,7 +1225,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	input = new Input();
 	input->Initialize(wc.hInstance,hwnd);
 
-	input->Update();
+	
 
 	
 	//ImGuiの初期化
@@ -1258,6 +1258,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
 
+			input->Update();
 
 			//transform.rotate.y += 0.03f;
 
