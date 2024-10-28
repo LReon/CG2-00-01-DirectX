@@ -1225,7 +1225,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	input = new Input();
 	input->Initialize(wc.hInstance,hwnd);
 	
-
+	float move = -1.0f;
 	
 	//ImGuiの初期化
 	IMGUI_CHECKVERSION();
@@ -1332,6 +1332,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 				transform.translate.y -= 0.01f;
 			}
 
+			if (input->TriggerKey(DIK_SPACE)) {
+				move *= -1;
+				transform.translate.x += move;
+				OutputDebugStringA("0");
+			}
+
 			directionalLightData->color.x = LightColor[0];
 			directionalLightData->color.y = LightColor[1];
 			directionalLightData->color.z = LightColor[2];
@@ -1359,10 +1365,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
 			transformationMatrixDataSprite->World = worldMatrixSprite;
 
-			Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
+			/*Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
 			uvTransformMatrix = Multiply(uvTransformMatrix, MakeRoatateZMatix(uvTransformSprite.rotate.z));
 			uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
-			materialDateSprite->uvTransform = uvTransformMatrix;
+			materialDateSprite->uvTransform = uvTransformMatrix;*/
 
 			//ImGuiの内部コマンドを生成する
 			ImGui::Render();
@@ -1429,8 +1435,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);//0501
 
-			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());//0400
-			commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+			//commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());//0400
+			//commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 			//実際のcommandListのImGuiの描画コマンドを積む
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());

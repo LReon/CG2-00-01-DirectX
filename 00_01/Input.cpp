@@ -7,7 +7,7 @@ void Input::Initialize(HINSTANCE hInstance, HWND hwnd)
 	HRESULT result;
 
 	// DirectInputのインスタンス生成
-	Microsoft::WRL::ComPtr<IDirectInput8> directInput = nullptr;
+	//Microsoft::WRL::ComPtr<IDirectInput8> directInput = nullptr;
 	result = DirectInput8Create(hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput, nullptr);
 	assert(SUCCEEDED(result));
 
@@ -35,16 +35,20 @@ bool Input::PushKey(BYTE keyNumber)
 
 bool Input::TriggerKey(BYTE keyNumber)
 {
-
+	if (!preKey[keyNumber] && key[keyNumber]) {
+		
+		return true;
+	}
 
 	return false;
 }
 
 void Input::Update()
 {
+	memcpy(preKey, key, sizeof(key));
 	keyboard->Acquire();
 	//BYTE key[256] = {};
 	keyboard->GetDeviceState(sizeof(key), key);
-
+	
 
 }
