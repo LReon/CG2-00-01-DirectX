@@ -24,10 +24,26 @@ void Input::Initialize(HINSTANCE hInstance, HWND hwnd)
 
 }
 
+bool Input::PushKey(BYTE keyNumber)
+{
+	if (key[keyNumber]) {
+		return true;
+	}
+
+	return false;
+}
+
+bool Input::TriggerKey(BYTE keyNumber)
+{
+
+
+	return false;
+}
+
 void Input::Update()
 {
 	keyboard->Acquire();
-	BYTE key[256] = {};
+	//BYTE key[256] = {};
 	keyboard->GetDeviceState(sizeof(key), key);
 
 

@@ -1224,8 +1224,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	Input* input = nullptr;
 	input = new Input();
 	input->Initialize(wc.hInstance,hwnd);
-
-	input->Update();
+	
 
 	
 	//ImGuiの初期化
@@ -1258,8 +1257,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
 
+			input->Update();
 
 			//transform.rotate.y += 0.03f;
+
+			
 
 			TransformUi[0][0] = transformSprite.scale.x;
 			TransformUi[0][1] = transformSprite.scale.y;
@@ -1315,6 +1317,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			transformSprite.translate.x = TransformUi[2][0];
 			transformSprite.translate.y = TransformUi[2][1];
 			transformSprite.translate.z = TransformUi[2][2];
+
+
+			if (input->PushKey(DIK_D)) {
+				transform.translate.x += 0.01f;
+			}
+			if (input->PushKey(DIK_A)) {
+				transform.translate.x -= 0.01f;
+			}
+			if (input->PushKey(DIK_W)) {
+				transform.translate.y += 0.01f;
+			}
+			if (input->PushKey(DIK_S)) {
+				transform.translate.y -= 0.01f;
+			}
 
 			directionalLightData->color.x = LightColor[0];
 			directionalLightData->color.y = LightColor[1];
