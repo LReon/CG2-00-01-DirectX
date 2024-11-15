@@ -1170,7 +1170,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	Input* input = nullptr;
 	input = new Input();
-	input->Initialize(windowsAPI->GetHInstance(), windowsAPI->GetHwnd());
+	input->Initialize(windowsAPI);
 	
 	float move = -1.0f;
 	
@@ -1480,15 +1480,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	//textureResource2->Release();
 
 	delete input;
-	delete windowsAPI;
 
+	// WindowsAPIの終了処理
+	windowsAPI->Finalize();
+	delete windowsAPI;
+	windowsAPI = nullptr;
 #ifdef _DEBUG
 	//debugController->Release();
 #endif
-	CloseWindow(windowsAPI->GetHwnd());
-
 	
-	CoUninitialize();
 
 	return 0;
 }

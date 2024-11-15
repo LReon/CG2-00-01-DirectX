@@ -24,6 +24,9 @@ public:// メンバ関数
 	// 更新
 	void Update();
 
+	// 終了
+	void Finalize();
+
 private:
 	// ウィンドウハンドル
 	HWND hwnd = nullptr;
