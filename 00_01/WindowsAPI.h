@@ -12,8 +12,22 @@ public:// メンバ関数
 
 	// 初期化
 	void Initialize();
+
+	//クライアントの領域サイズ
+	static const int32_t kClientWidth = 1280;
+	static const int32_t kClientHeight = 720;
+
+	// getter
+	HWND GetHwnd() const { return hwnd; }
+	HINSTANCE GetHInstance() const { return wc.hInstance; }
+
 	// 更新
 	void Update();
 
+private:
+	// ウィンドウハンドル
+	HWND hwnd = nullptr;
+	// ウィンドクラスの設定
+	WNDCLASS wc{};
 };
 

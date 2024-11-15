@@ -29,7 +29,7 @@ void WindowsAPI::Initialize()
 {
 	HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 
-	WNDCLASS wc{};
+	
 	//ウィンドウプロシージャ
 	wc.lpfnWndProc = WindowProc;
 	//ウィンドウクラス名
@@ -42,9 +42,7 @@ void WindowsAPI::Initialize()
 	//ウィンドウクラスを登録する
 	RegisterClass(&wc);
 
-	//クライアントの領域サイズ
-	const int32_t kClientWidth = 1280;
-	const int32_t kClientHeight = 720;
+	
 
 	//ウィンドウクラスを表す構造体にクライアント領域を入れる
 	RECT wrc = { 0, 0, kClientWidth, kClientHeight };
@@ -52,7 +50,7 @@ void WindowsAPI::Initialize()
 	//クラインと領域をもとに実際のサイズにwrcを変更してもらう
 	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
-	HWND hwnd = CreateWindow(
+	hwnd = CreateWindow(
 		wc.lpszClassName,		//利用するクラス名
 		L"CG2",					//タイトルバーの文字（なんでもいい)
 		WS_OVERLAPPEDWINDOW,	//よく見るウィンドウスタイル
