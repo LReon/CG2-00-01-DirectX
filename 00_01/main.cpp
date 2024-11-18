@@ -1193,10 +1193,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		//Windowにメッセージが来てたら最優先で処理させる
 		if (windowsAPI->ProcessMessage())
 		{
+
+
+
 			break;
 		}
-		else
-		{
+		
 			//ゲームの処理
 
 			ImGui_ImplDX12_NewFrame();
@@ -1424,7 +1426,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			hr = commandList->Reset(commandAllocator.Get(), nullptr);
 			assert(SUCCEEDED(hr));
 
-		}
+		
 
 	}
 
