@@ -1186,15 +1186,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
 		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
-	MSG msg{};
+	
 	//ウィンドウの×ボタンが押されるまでループ
-	while (msg.message != WM_QUIT)
+	while (true)
 	{
 		//Windowにメッセージが来てたら最優先で処理させる
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		if (windowsAPI->ProcessMessage())
 		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+			break;
 		}
 		else
 		{
