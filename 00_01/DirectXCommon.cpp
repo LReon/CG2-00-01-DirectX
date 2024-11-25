@@ -160,12 +160,6 @@ void DirectXCommon::RenderTargetViewInitialize()
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;//２ｄテクスチャとして書き込む
 	//ディスクリプタの先頭を取得する
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	//RTVを２つ作るディスクリプタを２つ用意
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
-	
-	
-
-	
 	//まず1つ目を作る。１つ目の最初のところに作る。作る場所を指定してあげる必要がある
 	//まず1つ目を作る。１つ目の最初のところに作る。作る場所を指定してあげる必要がある
 	rtvHandles[0] = rtvStartHandle;
@@ -205,21 +199,20 @@ void DirectXCommon::Fence()
 {
 	HRESULT hr;
 	//初期値0でFenceを作る
-	Microsoft::WRL::ComPtr<ID3D12Fence> fence = nullptr;
-	uint64_t fenceValue = 0;
+	
+	
 	hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 	assert(SUCCEEDED(hr));
 
 	//FenceのSignalを待つためのイベントを作成する
-	HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	
 	assert(fenceEvent != nullptr);
 
 }
 
 void DirectXCommon::Viewport()
 {
-	//ビューポート
-	D3D12_VIEWPORT viewport{};
+	
 	//クライアント領域のサイズと一緒にして画面全体に表示
 	viewport.Width = WindowsAPI::kClientWidth;
 	viewport.Height = WindowsAPI::kClientHeight;
@@ -231,8 +224,7 @@ void DirectXCommon::Viewport()
 
 void DirectXCommon::Scissor()
 {
-	//シザー矩形
-	D3D12_RECT scissorRect{};
+	
 	//基本的にビューポートと同じ矩形が個性されるようにする
 	scissorRect.left = 0;
 	scissorRect.right = WindowsAPI::kClientWidth;
@@ -373,6 +365,64 @@ void DirectXCommon::Initialize()
 	Scissor();
 	DXCCompiler();
 	ImGui();
+}
+
+void DirectXCommon::PreDraw()
+{
+	//これから書き込むバッファのインデックスを取得する
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+	//TransitionBarrierの設定
+	D3D12_RESOURCE_BARRIER barrier{};
+	// 描画先のRTVとDSVを設定する
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
+
+	//指定した色で画面全体をクリアする
+	float clearColor[] = { 0.1f, 0.125f, 0.5f, 1.0f }; //青っぽい色	RGBAの順
+	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
+
+	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+	//描画用のDescriptorHeapの設定
+	ID3D12DescriptorHeap* descriptoHeaps[] = { srvDescriptorHeap.Get() };
+	commandList->SetDescriptorHeaps(1, descriptoHeaps);
+
+	commandList->RSSetViewports(1, &viewport);//viewportを設定
+
+	commandList->RSSetScissorRects(1, &scissorRect);//scirssorを設定
+}
+
+void DirectXCommon::PostDraw()
+{
+	HRESULT hr;
+	//これから書き込むバッファのインデックスを取得する
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+	//TransitionBarrierの設定
+	D3D12_RESOURCE_BARRIER barrier{};
+	//コマンドリストの内容を確定させる。すべてのコマンドを積んでからCloseすること
+	hr = commandList->Close();
+	assert(SUCCEEDED(hr));
+	//GPUにコマンドリストの実行を行わせる
+	ID3D12CommandList* commandLists[] = { commandList.Get() };
+	//GPUとOSに画面の交換を行うよう通知する
+	swapChain->Present(1, 0);
+	//Fenceの値を更新
+	fenceValue++;
+	//GPUがここまでたどり着いたとき、Fenceの値を代入するようにSignalを送る
+	commandQueue->Signal(fence.Get(), fenceValue);
+	if (fence->GetCompletedValue() < fenceValue)
+	{
+		//指定したSignalにたどり着いていないので、たどり着くまで待つようにイベントを指定する
+		fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		//イベントを待つ
+		WaitForSingleObject(fenceEvent, INFINITE);
+	}
+	//次のフレーム用のコマンドリストを準備
+	hr = commandAllocator->Reset();
+	assert(SUCCEEDED(hr));
+	hr = commandList->Reset(commandAllocator.Get(), nullptr);
+	assert(SUCCEEDED(hr));
+
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)

@@ -16,6 +16,7 @@
 #include <wrl.h>
 #include "Input.h"
 #include "WindowsAPI.h"
+#include "DirectXCommon.h"
 
 #include <fstream>
 #include <sstream>
@@ -420,6 +421,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	WindowsAPI* windowsAPI = nullptr;
 	windowsAPI = new WindowsAPI();
 	windowsAPI->Initialize();
+
+	DirectXCommon* directXCommon = nullptr;
+	directXCommon = new DirectXCommon();
+	directXCommon->Initialize();
 	
 
 #ifdef _DEBUG
@@ -1038,9 +1043,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		//Windowにメッセージが来てたら最優先で処理させる
 		if (windowsAPI->ProcessMessage())
 		{
-
-
-
 			break;
 		}
 		
@@ -1166,11 +1168,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			//ImGuiの内部コマンドを生成する
 			ImGui::Render();
 
-			//これから書き込むバッファのインデックスを取得する
-			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+			directXCommon->PreDraw();
+			directXCommon->PostDraw();
 
-			//TransitionBarrierの設定
-			D3D12_RESOURCE_BARRIER barrier{};
+			
+
+			
+
+			
 			//今回のバリアはTransition
 			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 			//noneにしておく
@@ -1186,16 +1191,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			//TransitionBarrierを張る
 			commandList->ResourceBarrier(1, &barrier);
 
-			// 描画先のRTVとDSVを設定する
-			D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-			commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
-			//指定した色で画面全体をクリアする
-			float clearColor[] = { 0.1f, 0.125f, 0.5f, 1.0f }; //青っぽい色	RGBAの順
-			commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
-			commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+			
+			
 
-			commandList->RSSetViewports(1, &viewport);//viewportを設定
-			commandList->RSSetScissorRects(1, &scissorRect);//scirssorを設定
+			
+			
 			//RootSignatureを設定。PS0に設定しているけど別途設定が必要
 			commandList->SetGraphicsRootSignature(rootSignature.Get());
 			commandList->SetPipelineState(graphicsPipelineState.Get());//PS0を設定
@@ -1211,9 +1211,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			//wvp用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 
-			//描画用のDescriptorHeapの設定
-			ID3D12DescriptorHeap* descriptoHeaps[] = { srvDescriptorHeap.Get()};
-			commandList->SetDescriptorHeaps(1, descriptoHeaps);
+			
 
 			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 
@@ -1241,35 +1239,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			//TransitionBarrierを張る
 			commandList->ResourceBarrier(1, &barrier);
 
-			//コマンドリストの内容を確定させる。すべてのコマンドを積んでからCloseすること
-			hr = commandList->Close();
-			assert(SUCCEEDED(hr));
+			
 
-			//GPUにコマンドリストの実行を行わせる
-			ID3D12CommandList* commandLists[] = { commandList.Get()};
+			
 			commandQueue->ExecuteCommandLists(1, commandLists);
-			//GPUとOSに画面の交換を行うよう通知する
-			swapChain->Present(1, 0);
+			
 
-			//Fenceの値を更新
-			fenceValue++;
-			//GPUがここまでたどり着いたとき、Fenceの値を代入するようにSignalを送る
-			commandQueue->Signal(fence.Get(), fenceValue);
+			
+			
 			//Fenceの値が指定したSignal値にたどり着いているか確認する
 			//GetCompleteValueの初期値はFence作成時に渡した初期値
-			if (fence->GetCompletedValue() < fenceValue)
-			{
-				//指定したSignalにたどり着いていないので、たどり着くまで待つようにイベントを指定する
-				fence->SetEventOnCompletion(fenceValue, fenceEvent);
-				//イベントを待つ
-				WaitForSingleObject(fenceEvent, INFINITE);
-			}
+			
 
-			//次のフレーム用のコマンドリストを準備
-			hr = commandAllocator->Reset();
-			assert(SUCCEEDED(hr));
-			hr = commandList->Reset(commandAllocator.Get(), nullptr);
-			assert(SUCCEEDED(hr));
+			
 
 		
 
