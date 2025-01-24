@@ -41,7 +41,7 @@ PixcelShaderOutput main(VertexShaderOutput input)
         float32_t3 reflectLight = reflect(gDirectrionaLight.direction, normalize(input.normal));
         
         float RdotE = dot(reflectLight, toEye);
-        float speclarPow = pow(saturate(RdotE), gMaterial.shininess);
+       float specularPow = pow(saturate(RdotE), gMaterial.shininess);
         
         // HalfVectorを求めて計算-------------------------------------------
         float32_t halfVector = normalize(-gDirectrionaLight.direction + toEye);
@@ -56,7 +56,7 @@ PixcelShaderOutput main(VertexShaderOutput input)
         // 拡散反射
         float32_t3 diffuse = gMaterial.color.rgb * textureColor.rgb * gDirectrionaLight.color.rgb * cos * gDirectrionaLight.intensity;
         // 鏡面反射
-        float32_t3 specular = gDirectrionaLight.color.rgb * gDirectrionaLight.intensity * speclarPow * float32_t3(1.0f, 1.0f, 1.0f);
+        float32_t3 specular = gDirectrionaLight.color.rgb * gDirectrionaLight.intensity * specularPow * float32_t3(1.0f, 1.0f, 1.0f);
         
         // 拡散反射+鏡面反射
         output.color.rgb = diffuse + specular;
