@@ -8,7 +8,8 @@
 #include <dxcapi.h>
 #include <string>
 #include <Windows.h>
-
+#include <chrono>
+#include <thread>
 
 
 
@@ -151,5 +152,12 @@ private:
 	ID3D12Resource* VertexResource = nullptr;
 	//Resourceの生成
 	ID3D12Resource* createTextureResource = nullptr;
+
+
+	void InitializeFixFPS();
+
+	void UpdateFixFPS();
+
+	std::chrono::steady_clock::time_point reference_;
 
 };

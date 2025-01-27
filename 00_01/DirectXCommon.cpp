@@ -1,6 +1,7 @@
 
 #include "DirectXCommon.h"
 #include <cassert>
+#include <chrono>
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 #include "Logger.h"
@@ -20,6 +21,8 @@ void DirectXCommon::Initialize(WindowsAPI* windowsAPI)
 	assert(windowsAPI);
 	// メンバ変数に記録
 	this->windowsAPI = windowsAPI;
+
+	
 	// デバイスの初期化
 	DeviceInitialize();
 	// コマンド関連の初期化
@@ -45,6 +48,7 @@ void DirectXCommon::Initialize(WindowsAPI* windowsAPI)
 	// ImGuiの初期化
 	ImGuiInitialize();
 
+	InitializeFixFPS();
 }
 
 void DirectXCommon::DeviceInitialize()
@@ -429,7 +433,7 @@ void DirectXCommon::PostDraw()
 	hr = commandList->Reset(commandAllocator.Get(), nullptr);
 	assert(SUCCEEDED(hr));
 
-	
+	UpdateFixFPS();
 
 }
 
@@ -600,6 +604,38 @@ Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap
 	HRESULT hr = device->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&descriptorHeap));
 	assert(SUCCEEDED(hr));
 	return descriptorHeap;
+}
+
+void DirectXCommon::InitializeFixFPS()
+{
+	reference_ = std::chrono::steady_clock::now();
+
+}
+
+void DirectXCommon::UpdateFixFPS()
+{
+	// 1/60秒ぴったりの時間
+	const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / 60.0f));
+	// 1/60秒よりわずかに短い時間
+	const std::chrono::microseconds kMinCheckTime(uint64_t(1000000.0f / 65.0f));
+
+	// 現在時間を取得する
+	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+	// 前回記録からの経過時間を取得する
+	std::chrono::microseconds elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - reference_);
+
+	// 1/60秒（よりわずかに短い時間）経っていない場合
+	if (elapsed < kMinTime) {
+
+		// 1/60秒経過するまで微小なスリープを繰り返す
+		while (std::chrono::steady_clock::now() - reference_ < kMinTime)
+		{
+			// 1マイクロ秒スリープ
+			std::this_thread::sleep_for(std::chrono::microseconds(1));
+		}
+
+	}
+	reference_ = std::chrono::steady_clock::now();
 }
 
 // 指定番号のCPUデスクリプタハンドルを取得する

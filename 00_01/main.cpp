@@ -823,6 +823,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			transform.translate.x += move;
 			OutputDebugStringA("0");
 		}
+		
+
 
 		directionalLightData->color.x = LightColor[0];
 		directionalLightData->color.y = LightColor[1];
