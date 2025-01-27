@@ -363,6 +363,7 @@ void DirectXCommon::PreDraw()
 
 	// 描画先のRTVとDSVを設定する
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
 	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
 
 	//指定した色で画面全体をクリアする
