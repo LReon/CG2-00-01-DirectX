@@ -54,8 +54,8 @@ public:// メンバ関数
 	void PostDraw();
 
 	// getter
-	ID3D12Device* GetDevice()const { return device.Get(); }
-	ID3D12GraphicsCommandList* GetCommandList()const { return commandList.Get(); }
+	Microsoft::WRL::ComPtr<ID3D12Device> GetDevice()const { return device.Get(); }
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> GetCommandList()const { return commandList.Get(); }
 
 	// シェーダーのコンパイル
 	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
@@ -133,9 +133,9 @@ private:
 	//シザー矩形
 	D3D12_RECT scissorRect{};
 
-	IDxcUtils* dxcUtils = nullptr;
-	IDxcCompiler3* dxcCompiler = nullptr;
-	IDxcIncludeHandler* includeHandler = nullptr;
+	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils = nullptr;
+	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler = nullptr;
+	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
 	D3D12_RESOURCE_BARRIER barrier{};
 
 	UINT backBufferIndex;
@@ -150,12 +150,12 @@ private:
 	//hlslファイルを読む
 	Microsoft::WRL::ComPtr<IDxcBlobEncoding> shaderSource = nullptr;
 	Microsoft::WRL::ComPtr<IDxcResult> shaderResult = nullptr;
-	IDxcBlobUtf8* shaderError = nullptr;
-	IDxcBlob* shaderBlod = nullptr;
+	Microsoft::WRL::ComPtr<IDxcBlobUtf8> shaderError = nullptr;
+	Microsoft::WRL::ComPtr<IDxcBlob> shaderBlod = nullptr;
 	//実際に頂点リソースを作る
-	ID3D12Resource* VertexResource = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Resource> VertexResource = nullptr;
 	//Resourceの生成
-	ID3D12Resource* createTextureResource = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Resource> createTextureResource = nullptr;
 
 
 	void InitializeFixFPS();
