@@ -924,7 +924,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	OutputDebugStringA("Hello.DirectX!\n");
 
 	//解放処理
-	CloseHandle(dxCommon->fenceEvent);
+	
 	//indexResourceSprite->Release();
 	//vertexResourceSprite->Release();
 	//indexResource->Release();
@@ -972,7 +972,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	windowsAPI = nullptr;
 
 	// DirectX解放
+	dxCommon->Finalize();
 	delete dxCommon;
+	
 
 #ifdef _DEBUG
 	//debugController->Release();

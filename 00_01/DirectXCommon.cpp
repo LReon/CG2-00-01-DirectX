@@ -655,3 +655,8 @@ D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetGPUDescriptorHandle(ID3D12Descript
 	return handleGPU;
 }
 
+void DirectXCommon::Finalize()
+{
+	CloseHandle(fenceEvent);
+}
+
