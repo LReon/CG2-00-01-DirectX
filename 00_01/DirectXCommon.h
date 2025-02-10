@@ -84,6 +84,12 @@ public:// メンバ関数
 	uint32_t descriptorSizeRTV;
 	uint32_t descriptorSizeDSV;
 
+	void ResourceLeakChecker();
+
+	
+
+
+
 	// 終了
 	void Finalize();
 

@@ -199,24 +199,6 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 // Windowsアプリのエントリーポイント
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-	struct D3DResourceLeakChecker {
-		~D3DResourceLeakChecker() {
-
-			//リソースリークチェック
-			Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
-			if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
-				debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-				debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
-				debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
-				//debug->Release();
-			}
-		}
-	};
-
-	/*D3DResourceLeakChecker leakCheck;
-	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory;
-	Microsoft::WRL::ComPtr<ID3D12Device> device;*/
-
 
 	WindowsAPI* windowsAPI = nullptr;
 	windowsAPI = new WindowsAPI();
@@ -228,6 +210,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	DirectXCommon* dxCommon = nullptr;
 	dxCommon = new DirectXCommon();
 	dxCommon->Initialize(windowsAPI);
+
+	dxCommon->ResourceLeakChecker();
+
+
+	/*D3DResourceLeakChecker leakCheck;
+	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory;
+	Microsoft::WRL::ComPtr<ID3D12Device> device;*/
+
+
+	
 
 	HRESULT hr;
 	////DepthStencilStateの設定
