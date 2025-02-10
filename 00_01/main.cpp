@@ -200,7 +200,7 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 // Windowsアプリのエントリーポイント
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-	D3ResourceLeakChecker();
+	D3ResourceLeakChecker leakChecker;
 
 	WindowsAPI* windowsAPI = nullptr;
 	windowsAPI = new WindowsAPI();
