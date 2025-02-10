@@ -18,6 +18,7 @@
 #include "Input.h"
 #include "WindowsAPI.h"
 #include "DirectXCommon.h"
+#include "D3ResourceLeackChecker.h"
 
 #include <fstream>
 #include <sstream>
@@ -199,6 +200,7 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 // Windowsアプリのエントリーポイント
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
+	D3ResourceLeakChecker();
 
 	WindowsAPI* windowsAPI = nullptr;
 	windowsAPI = new WindowsAPI();
@@ -211,7 +213,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	dxCommon = new DirectXCommon();
 	dxCommon->Initialize(windowsAPI);
 
-	dxCommon->ResourceLeakChecker();
+	
 
 
 	/*D3DResourceLeakChecker leakCheck;
