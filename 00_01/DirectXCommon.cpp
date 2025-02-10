@@ -675,6 +675,11 @@ void DirectXCommon::ResourceLeakChecker()
 
 void DirectXCommon::Finalize()
 {
+	//ImGuiの終了処理
+	ImGui_ImplDX12_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+
 	CloseHandle(fenceEvent);
 }
 

@@ -907,10 +907,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	}
 
 
-	//ImGuiの終了処理
-	ImGui_ImplDX12_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
+	
 
 	//出力ウィンドウへの文字出力
 	OutputDebugStringA("Hello.DirectX!\n");
