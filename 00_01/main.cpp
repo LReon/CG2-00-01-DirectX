@@ -787,7 +787,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			Callback callback = judge_result;
 			callback(0);
 		}
-
 		
 		// X、Y、Zの位置をスライダーで変更
 		ImGui::SliderFloat("X Position", &transform.rotate.x, -10.0f, 10.0f);
