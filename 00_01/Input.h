@@ -16,6 +16,7 @@ public:
 	void Update();
 	bool PushKey(BYTE keyNumber);
 	bool TriggerKey(BYTE keyNumber);
+	bool ReleseKey(BYTE keyNumber);
 private:
 
 	// WindowsAPI

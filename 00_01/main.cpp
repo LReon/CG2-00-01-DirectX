@@ -197,6 +197,18 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 	return modelData;
 }
 
+Transform transform{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
+
+/*			PG3評価課題				*/
+// コールバック関数のプロトタイプ宣言
+typedef void (*Callback)(int result);
+void judge_result(int result) {
+
+	transform.rotate.y += 0.1f;
+}
+/////////////////////////////////////
+
+
 // Windowsアプリのエントリーポイント
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
@@ -685,7 +697,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 
 
-	Transform transform{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
+	
 	Transform cameraTransform{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 10.0f} };
 	Transform transformSprite{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
@@ -766,6 +778,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 		LightIntensity = directionalLightData->intensity;
 
+		if (input->ReleseKey(DIK_ESCAPE)){
+			break;
+		}
+
+		/*PG3評価課題*/
+		if (input->ReleseKey(DIK_SPACE)){
+			Callback callback = judge_result;
+			callback(0);
+		}
+
+		
 		// X、Y、Zの位置をスライダーで変更
 		ImGui::SliderFloat("X Position", &transform.rotate.x, -10.0f, 10.0f);
 		ImGui::SliderFloat("Y Position", &transform.rotate.y, -10.0f, 10.0f);
@@ -812,11 +835,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			transform.translate.y -= 0.01f;
 		}
 
-		if (input->TriggerKey(DIK_SPACE)) {
+		/*if (input->TriggerKey(DIK_SPACE)) {
 			move *= -1;
 			transform.translate.x += move;
 			OutputDebugStringA("0");
-		}
+		}*/
 		
 
 
